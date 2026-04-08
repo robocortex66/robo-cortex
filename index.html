@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robo-Cortex</title>
+    <style>
+        /* 全局样式重置 + 网页默认125%缩放 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        /* 关键：整个网页默认125%显示 */
+        html {
+            zoom: 1.25;
+        }
+
+        /* 全局颜色变量 */
+        :root {
+            --primary-purple: #a855f7;
+            --primary-blue: #3b82f6;
+            --text-dark: #111827;
+            --text-light: #6b7280;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+
+        /* 顶部导航栏 - 核心修改：固定页眉高度 */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 15%; /* 移除上下padding，改用height固定高度 */
+            height: 4rem; /* 固定页眉总高度（不变） */
+            display: flex;
+            align-items: center; /* 内容垂直居中 */
+            justify-content: space-between;
+        }
+
+        /* 页眉Logo图片样式 - 只改图片大小，页眉高度不变 */
+        .nav-brand-img {
+            height: 6rem; /* 只改这里调整图片大小！页眉高度仍为4rem */
+            width: auto;
+            display: block;
+            /* 可选：如果想让图片在页眉内垂直居中（防止图片过大溢出） */
+            max-height: 100%;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center; /* 导航文字也垂直居中 */
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-purple);
+        }
+
+        /* 首屏标题区（移除按钮组 + 新增标题图片） */
+        .hero {
+            padding: 3rem 15% 2rem;
+            text-align: center;
+            background: linear-gradient(to bottom, #f0f4ff, white);
+            position: relative; /* 新增：用于图片重叠定位 */
+        }
+        
+        /* 标题图片样式 - 核心修改：紧贴文字 + 可重叠 */
+        .hero-title-img {
+            max-width: 300px;
+            margin: 0 auto -60px; /* 负margin让图片下压到文字 */
+            display: block;
+            position: relative;
+            z-index: 2; /* 确保图片在文字上方 */
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+            position: relative;
+            z-index: 1; /* 文字在图片下方，允许图片重叠 */
+            padding-top: 10px; /* 轻微补白避免文字被完全遮挡 */
+        }
+
+        /* 通用模块样式 */
+        .section {
+            padding: 3rem 15%;
+            max-width: 1400px;
+            margin: 0 auto;
+            scroll-margin-top: 80px; /* 关键：修复锚点跳转位置 */
+        }
+
+        .section:nth-child(even) {
+            background: var(--bg-light);
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 10px;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .section-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, #3b82f6, #60a5fa);
+            border-radius: 999px;
+        }
+
+        .section-img {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto 1.5rem;
+            display: block;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-caption {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-dark);
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: justify;
+        }
+
+        /* Abstract 模块单独样式 */
+        .abstract-content {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-dark);
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: justify;
+        }
+
+        /* 视频 Demo 网格 + 放大弹窗样式 */
+        .demo-group {
+            margin-bottom: 3rem;
+        }
+        .demo-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: center;
+            margin-bottom: 1.2rem;
+        }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .video-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+        }
+        .video-card video {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        /* 鼠标悬浮显示放大图标 */
+        .video-card:hover video {
+            transform: scale(1.03);
+        }
+        .video-card {
+            cursor: zoom-in;
+        }
+        /* 视频名称在下方 */
+        .video-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* 视频放大弹窗 */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        .modal-video {
+            width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+        }
+        .close-modal {
+            position: absolute;
+            top: -2.2rem;
+            right: 0;
+            background: white;
+            color: #222;
+            border: none;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 页脚 */
+        footer {
+            padding: 2rem 15%;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* 响应式适配 - 页眉高度仍固定，只调整图片和导航间距 */
+        @media (max-width: 1024px) {
+            nav, .hero, .section {
+                padding: 0 5%; /* 只改左右padding，页眉height仍为4rem */
+            }
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .hero-title-img {
+                max-width: 250px;
+                margin: 0 auto -15px; /* 平板端调整重叠距离 */
+            }
+            .nav-links {
+                gap: 1rem;
+            }
+            .nav-brand-img {
+                height: 3rem; /* 平板端只调图片大小，页眉高度不变 */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 0.75rem;
+                font-size: 0.9rem;
+            }
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+            .hero-title-img {
+                max-width: 200px;
+                margin: 0 auto -10px; /* 手机端调整重叠距离 */
+            }
+            .section-title {
+                font-size: 1.5rem;
+            }
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-brand-img {
+                height: 3rem; /* 手机端只调图片大小，页眉高度不变 */
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 顶部导航栏 - 修正导航文字 + 替换为图片Logo -->
+    <nav>
+        <!-- 页眉Logo替换为标题图片 -->
+        <img src="img/20260408-171851.png" alt="Robo-Cortex Logo" class="nav-brand-img">
+        <div class="nav-links">
+            <a href="#abstract">Abstract</a>
+            <a href="#overview">Overview</a>
+            <a href="#paradigm">Paradigm</a>
+            <a href="#method">Method</a>
+            <a href="#realworld">Real World Experiments</a> <!-- 修正文字与页面标题一致 -->
+            <a href="#demo">Real World Demo</a> <!-- 修正文字与页面标题一致 -->
+        </div>
+    </nav>
+
+    <!-- 首屏标题区（已移除按钮 + 新增标题图片） -->
+    <header class="hero">
+        <!-- 新增标题图片 -->
+        <img src="img/20260408-171851.png" alt="Robo-Cortex Logo" class="hero-title-img">
+        <!-- 移除了 Robo-Cortex: 文字 -->
+        <h1>
+            A Self-Evolving Embodied Agent via Dual-Grain<br>
+            Cognitive Memory and Autonomous<br>
+            Knowledge Induction
+        </h1>
+    </header>
+
+    <!-- Abstract 模块 -->
+    <section id="abstract" class="section">
+        <h2 class="section-title">Abstract</h2>
+        <div class="abstract-content">
+            The ability to navigate and interact with complex environments is central to real-world embodied agents, yet navigation in unseen environments remains challenging due to “experiential amnesia,” where existing trajectory-driven or reactive policies fail to synthesize generalizable strategies from past interactions. We propose <strong>Robo-Cortex</strong>, a self-evolving framework that enables robots to autonomously induce navigation heuristics and refine cognitive strategies through a continuous reflection-adaptation loop. By abstracting success patterns and failure pitfalls into natural-language heuristics, Robo-Cortex enables a transition from passive execution to active strategy evolution. Our core innovation is an <strong>Autonomous Knowledge Induction (AKI) mechanism</strong> that distills multimodal trajectories into a structured Navigation Heuristic Library for knowledge generalization. The architecture further incorporates a <strong>Dual-Grain Cognitive Memory system</strong>, comprising a Short-term Reflective Memory (SRM) for real-time local progress analysis, and a Long-term Principle Memory (LPM) that abstracts past trajectories into reusable guiding and cautionary principles. To ensure robust decision-making, we introduce a <strong>multimodal Imagine-then-Verify loop</strong>, where a world model simulates potential outcomes and a VLM-based evaluator validates action plans. Extensive evaluations on IGNav, AR, and AEQA show that Robo-Cortex consistently outperforms strong baselines in both task success and exploration efficiency, with gains of up to <strong>+4.16% SPL</strong> over the strongest prior method and up to <strong>+15.30% SPL</strong> under heuristic transfer to unseen environments. Preliminary real-world robotic experiments further support the effectiveness of Robo-Cortex in physical settings.
+        </div>
+    </section>
+
+    <!-- Overview 模块 -->
+    <section id="overview" class="section">
+        <h2 class="section-title">Overview</h2>
+        <img src="img/fig_1.png" alt="Overview of Robo-Cortex" class="section-img">
+        <p class="section-caption">
+            <strong>Overview of Robo-Cortex.</strong> Robo-Cortex is a self-evolving embodied navigation framework with three components: an <em>Imagine-then-Verify</em> planning loop for closed-loop decision making, <em>Dual-Grain Cognitive Memory</em> for reflection at two temporal scales, and <em>Autonomous Knowledge Induction</em> for distilling transferable navigation heuristics from experience. Together, they form an interaction-reflection-conceptualization-adaptation loop for continual strategy evolution.
+        </p>
+    </section>
+
+    <!-- Paradigm 模块 -->
+    <section id="paradigm" class="section">
+        <h2 class="section-title">Paradigm</h2>
+        <img src="img/fig_2.png" alt="Comparison of embodied-agent paradigms" class="section-img">
+        <p class="section-caption">
+            <strong>Comparison of prior embodied-agent paradigms and Robo-Cortex</strong>. <em>Memory-augmented navigation</em> mainly preserves scene-level and trajectory-level context for decision making, but does not explicitly form strategy-level memory. <em>Self-improving agents</em> can refine behavior through critique, abstraction, or skill/model updates, yet are typically not grounded in closed-loop embodied interaction or do not induce transferable embodied heuristics. <em>Robo-Cortex</em> unifies reflective memory, principle memory, and heuristic induction in a self-evolving embodied framework that distills multimodal interaction experience into transferable navigation heuristics for future reflection, planning, and strategy evolution.
+        </p>
+    </section>
+
+    <!-- Method 模块 -->
+    <section id="method" class="section">
+        <h2 class="section-title">Method</h2>
+        <img src="img/fig_3.png" alt="Internal Workflow of Robo-Cortex" class="section-img">
+        <p class="section-caption">
+            <strong>Internal Workflow of Robo-Cortex.</strong> Robo-Cortex integrates <strong>(a) Imagine-then-Verify Planning Loop</strong>, <strong>(b) Short-Term Reflective Memory</strong>, <strong>(c) Long-Term Principle Memory</strong> and <strong>(d) Autonomous Knowledge Induction</strong> through a shared memory graph. During execution, recent subtasks are analyzed for local progress and failure patterns, while related past experiences are retrieved as principle-level guidance. Meanwhile, accumulated trajectories are continually abstracted into reusable navigation heuristics and fed back into future reflection and planning, enabling continual strategy evolution over time.
+        </p>
+    </section>
+
+    <!-- RealWorld 模块 -->
+    <section id="realworld" class="section">
+        <h2 class="section-title">Real World Experiments</h2>
+        <img src="img/fig_5.png" alt="Real-world benefit of short-term reflection" class="section-img">
+        <p class="section-caption">
+            <strong>Real-world benefit of short-term reflection.</strong> In an image-goal navigation task, the robot without SRM drifts away from the target after losing goal-relevant cues at a critical step. With SRM, Robo-Cortex detects the misalignment, reflects on the failure, and recovers by returning toward the last known goal-consistent region, leading to successful completion.
+        </p>
+    </section>
+
+    <!-- Real World Demo 模块 -->
+    <section id="demo" class="section">
+        <h2 class="section-title">Real World Demo</h2>
+        
+        <!-- Success Case -->
+        <div class="demo-group">
+            <h3 class="demo-title">Success Case</h3>
+            <div class="video-grid">
+                <div class="video-card" onclick="openModal(this.querySelector('video'))">
+                    <video autoplay loop muted playsinline>
+                        <source src="real_world_demo/living_room_success.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-name">Living Room</div>
+                </div>
+                <div class="video-card" onclick="openModal(this.querySelector('video'))">
+                    <video autoplay loop muted playsinline>
+                        <source src="real_world_demo/supermarket_success.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-name">Supermarket</div>
+                </div>
+                <div class="video-card" onclick="openModal(this.querySelector('video'))">
+                    <video autoplay loop muted playsinline>
+                        <source src="real_world_demo/living_room_2_success.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-name">Bedroom</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Failure Case -->
+        <div class="demo-group">
+            <h3 class="demo-title">Failure Case</h3>
+            <div class="video-grid">
+                <div class="video-card" onclick="openModal(this.querySelector('video'))">
+                    <video autoplay loop muted playsinline>
+                        <source src="real_world_demo/living_room_fail.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-name">Living Room</div>
+                </div>
+                <div class="video-card" onclick="openModal(this.querySelector('video'))">
+                    <video autoplay loop muted playsinline>
+                        <source src="real_world_demo/supermarket_fail.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-name">Supermarket</div>
+                </div>
+                <div class="video-card" onclick="openModal(this.querySelector('video'))">
+                    <video autoplay loop muted playsinline>
+                        <source src="real_world_demo/living_room_2_fail.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-name">Bedroom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 视频放大弹窗 -->
+    <div class="video-modal" id="videoModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <video class="modal-video" autoplay loop muted playsinline controls></video>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <p>Robo-Cortex © 2025 | ICLR 2026 Submission</p>
+    </footer>
+
+    <!-- 平滑滚动 + 视频弹窗JS -->
+    <script>
+        // 平滑滚动（简化逻辑，提升稳定性）
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 视频放大弹窗功能
+        const modal = document.getElementById('videoModal');
+        const modalVideo = modal.querySelector('.modal-video');
+
+        function openModal(videoEl) {
+            modalVideo.src = videoEl.querySelector('source').src;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            modalVideo.src = '';
+        }
+
+        // 点击弹窗空白处关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    </script>
+</body>
+</html>
